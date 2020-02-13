@@ -1,0 +1,43 @@
+#!/bin/bash
+
+if [ "$(basename "$SHELL")" = "zsh" ]; then
+  HISTFILE=~/.zsh_history
+else
+  HISTFILE=~/.bash_history
+fi
+
+Command="$1"
+Save="$@"
+function save() {
+  echo -e "\n\e[1m§: command \e[1m$Command \e[0mrun with success, choose a name:"
+  echo ">"
+  read var
+  echo "$var | $Save" >>~/.silcrow_history
+  echo $var saved correctly
+}
+
+if test -z "$Command"; then
+  echo "Start Registering!"
+  LastCommandId=$(echo $(history | tail -n2 | head -n1 | awk '{print $1;}'))
+  echo $LastCommandId
+  echo $LastCommandId >/tmp/silcrow_last_id
+elif [ "$Command" = "stop" ]; then
+  CommandsToSave=$(fc -l $LastCommandId)
+  echo $CommandsToSave
+else
+  if ! [ -x "$(command -v $Command)" ]; then
+    echo running $save_command
+
+    $save_command
+    exit 0
+  fi
+
+  "$@"
+  ret=$?
+  if [[ $ret -eq 0 ]]; then
+    save
+  else
+    echo "Error: Command [ $@ ] returned $ret"
+    exit $ret
+  fi
+fi
